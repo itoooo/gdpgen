@@ -16,22 +16,22 @@ type Token struct {
 	Value string
 }
 
-type pattern struct {
-	name  string
-	regex *regexp.Regexp
+type Pattern struct {
+	Name  string
+	Regex *regexp.Regexp
 }
 
-func newPattern(name string, regexPattern string) pattern {
+func NewPattern(name string, regexPattern string) Pattern {
 	r, err := regexp.Compile("^" + regexPattern)
 	if err != nil {
 		panic(err)
 	}
-	return pattern{name, r}
+	return Pattern{name, r}
 }
 
 type RegexLexer struct {
 	chars    []rune
-	patterns []pattern
+	patterns []Pattern
 	pos      int
 	line     int
 	column   int
@@ -43,12 +43,12 @@ func (l *RegexLexer) GetReader(s string) {
 
 func (l *RegexLexer) AddPattern(name, pattern string) {
 	for _, p := range l.patterns {
-		if p.name == name {
+		if p.Name == name {
 			return
 		}
 	}
 
-	l.patterns = append(l.patterns, newPattern(name, pattern))
+	l.patterns = append(l.patterns, NewPattern(name, pattern))
 }
 
 func (l *RegexLexer) GetNextToken() Token {
@@ -63,7 +63,7 @@ func (l *RegexLexer) GetNextToken() Token {
 			continue
 		}
 		for _, p := range l.patterns {
-			mRange := p.regex.FindStringIndex(string(l.chars[i:]))
+			mRange := p.Regex.FindStringIndex(string(l.chars[i:]))
 			if mRange != nil {
 				l.column = l.column + (mRange[1] - mRange[0])
 				value := l.chars[i+mRange[0] : i+mRange[1]]
@@ -74,7 +74,7 @@ func (l *RegexLexer) GetNextToken() Token {
 					l.pos = l.pos + len(l.chars)
 					l.chars = []rune{}
 				}
-				return Token{p.name, string(value)}
+				return Token{p.Name, string(value)}
 			}
 		}
 	}
@@ -90,13 +90,13 @@ func (l *RegexLexer) GetCurrentPosition() (int, int) {
 func NewRegexLexer() Lexer {
 	return &RegexLexer{
 		[]rune{},
-		[]pattern{},
+		[]Pattern{},
 		0, 1, 0,
 	}
 }
 
-func dumpPatterns(patterns []pattern) {
+func dumpPatterns(patterns []Pattern) {
 	for _, p := range patterns {
-		logger.Printf("regex: %v\n", p)
+		logger.Printf("Regex: %v\n", p)
 	}
 }
